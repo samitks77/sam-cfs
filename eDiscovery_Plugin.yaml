@@ -1,0 +1,66 @@
+openapi: 3.0.0
+
+info:
+    title: eDiscovery Case Creation Plugin
+    description: Skills for creating a plugin that will help create eDiscovery case in Purview via Graph API Call
+    version: "v1"
+servers:
+   - url: https://graph.microsoft.com/beta/compliance/ediscovery
+   #  - url: http://172.13.112.25:5000
+    
+
+paths:
+    /cases:
+        post:
+            operationId: Create eDiscovery case in Purview
+            description: Create eDiscovery case based on user supplied name
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                displayName:
+                                    type: string
+                                    description: Display name supplied by the user
+                    required:
+                        - displayName
+                    responses:
+                        "200":
+                            description: OK
+                            content:
+                                application/json:
+                                
+    /cases/{caseId}/custodians:
+        post:
+            operationId: Add custodian to eDiscovery case in Purview
+            description: Add custodian to eDiscovery case from previous step in Purview
+            parameters:
+                - in: path
+                  name: caseId
+                  schema:
+                      type: string
+                  required: true
+                  description: caseId in eDiscovery
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    description: email supplied by the user
+                                applyHoldToSources:
+                                    type: string
+                                    description: applyHoldToSources supplied by the user
+                        required:
+                            - email
+                            - applyHoldToSources
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
