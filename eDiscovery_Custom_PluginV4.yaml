@@ -1,0 +1,18 @@
+Descriptor:
+  Name: eDiscovery Case Creation PluginV4
+  DisplayName: eDiscovery Case Creation Plugin
+  Description: The skills in this plugin will help create eDiscovery case in Purview via Graph API Call-V4
+  DescriptionForModel: The skills in this plugin will help create eDiscovery case in Purview
+
+  Authorization:
+    Type: OAuthAuthorizationCodeFlow
+    ClientId: 163bfef2-efdf-4e0e-b497-99b4ed3da3aa
+    AuthorizationEndpoint: https://login.microsoftonline.com/7bf03161-cb47-420d-9b84-de3322a78596/oauth2/v2.0/authorize
+    TokenEndpoint: https://login.microsoftonline.com/7bf03161-cb47-420d-9b84-de3322a78596/oauth2/v2.0/token
+    Scopes: offline_access user.read eDiscovery.Read.All eDiscovery.ReadWrite.All
+    AuthorizationContentType: application/x-www-form-urlencoded
+
+SkillGroups:
+  - Format: API
+    Settings:
+      OpenApiSpecUrl: https://raw.githubusercontent.com/samitks77/sam-cfs/main/eDiscovery_PluginV4.yaml
