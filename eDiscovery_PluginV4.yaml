@@ -318,7 +318,7 @@ paths:
                                     type: string
                                     description: The options for adding items to reviewSet that you'd like to add to the review set, supplied by the user. Examples are "allVersions" and/or linkedFiles, you can use both seperated by a comma. Required
                         required:
-                            - id
+                            - search
                             - additionalDataOptions
             responses:
                 "200":
