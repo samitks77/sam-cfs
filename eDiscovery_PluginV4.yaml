@@ -308,7 +308,7 @@ paths:
                             type: object
                             properties:
                                 search:
-                                    type: object
+                                    type: string
                                     properties:
                                         id:
                                           type: string
