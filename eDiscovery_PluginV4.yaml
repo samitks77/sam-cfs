@@ -6,11 +6,7 @@ info:
     version: "v1"
 servers:
    - url: https://graph.microsoft.com/v1.0/security/cases
-   #https://graph.microsoft.com/beta/compliance/ediscovery 
-   #https://graph.microsoft.com/v1.0/security/cases/ediscoveryCases
-   #  - url: http://172.13.112.25:5000
     
-
 paths:
     /ediscoveryCases:
         post:
