@@ -1,0 +1,146 @@
+openapi: 3.0.0
+info:
+  title: Security Recommendations API
+  description: API for retrieving security recommendations related to applications, vulnerabilities, and configuration issues.
+  version: 1.0.0
+servers:
+   - url: https://api.securitycenter.microsoft.com/api
+
+paths:
+  /recommendations:
+    get:
+      summary: Retrieve security recommendations
+      description: Fetch a list of active security recommendations.
+      DescriptionForModel: |
+        Use this endpoint to fetch a list of active security recommendations that assist in identifying applications, vulnerabilities, or configuration issues within an organization's infrastructure. 
+        - **Use this** when the objective is to assess or prioritize current security recommendations based on factors like severity, affected assets, or associated threats. 
+        - This is particularly helpful for SOC teams needing insights into vulnerabilities or software requiring updates to reduce exposure or resolve issues.
+        - This schema provides the structure for a security recommendation, detailing relevant information about vulnerabilities, associated threats, and potential remediations. 
+        - **Use this information** to analyze key properties like `severityScore`, `publicExploit`, and `associatedThreats`, which are critical in assessing the risk and prioritization of each recommendation. 
+        - **Attributes** like `exposedMachinesCount` and `exposedCriticalDevices` are especially useful in understanding the potential impact on critical assets.
+      responses:
+        '200':
+          description: A list of security recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+
+components:
+  schemas:
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the recommendation.
+          example: "va-_-microsoft-_-edge_chromium-based"
+        productName:
+          type: string
+          description: Name of the affected product.
+          example: "edge_chromium-based"
+        recommendationName:
+          type: string
+          description: Detailed recommendation for the update or mitigation.
+          example: "Update Microsoft Edge Chromium-based to version 127.0.2651.74"
+        weaknesses:
+          type: integer
+          description: Number of weaknesses associated with this recommendation.
+          example: 762
+        vendor:
+          type: string
+          description: Vendor name of the affected product.
+          example: "microsoft"
+        recommendedVersion:
+          type: string
+          description: Recommended version to which the product should be updated.
+          example: "127.0.2651.74"
+        recommendedVendor:
+          type: string
+          description: Recommended vendor for mitigation.
+          example: ""
+        recommendedProgram:
+          type: string
+          description: Recommended program to address the issue.
+          example: ""
+        recommendationCategory:
+          type: string
+          description: Category of the recommendation.
+          example: "Application"
+        subCategory:
+          type: string
+          description: Subcategory of the recommendation.
+          example: ""
+        severityScore:
+          type: number
+          format: float
+          description: Severity score of the recommendation.
+          example: 0
+        publicExploit:
+          type: boolean
+          description: Whether a public exploit is available for this vulnerability.
+          example: true
+        activeAlert:
+          type: boolean
+          description: Indicates if there is an active alert associated with this recommendation.
+          example: false
+        associatedThreats:
+          type: array
+          items:
+            type: string
+          description: List of associated threat IDs.
+          example: ["71d9120e-7eea-4058-889a-1a60bbf7e312"]
+        remediationType:
+          type: string
+          description: Type of remediation action recommended.
+          example: "Update"
+        status:
+          type: string
+          description: Status of the recommendation.
+          example: "Active"
+        configScoreImpact:
+          type: number
+          format: float
+          description: Impact of this recommendation on configuration score.
+          example: 0
+        exposureImpact:
+          type: number
+          format: float
+          description: Impact of this vulnerability on exposure.
+          example: 1.1744086343876479
+        totalMachineCount:
+          type: integer
+          description: Total number of machines affected.
+          example: 261
+        exposedMachinesCount:
+          type: integer
+          description: Number of exposed machines.
+          example: 193
+        nonProductivityImpactedAssets:
+          type: integer
+          description: Count of non-productivity impacted assets.
+          example: 0
+        relatedComponent:
+          type: string
+          description: The component related to this recommendation.
+          example: "Edge Chromium-based"
+        hasUnpatchableCve:
+          type: boolean
+          description: Indicates if there are any unpatchable CVEs associated with this recommendation.
+          example: false
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags related to the recommendation.
+          example: ["internetFacing"]
+        exposedCriticalDevices:
+          type: integer
+          description: Number of exposed critical devices.
+          example: 116
+     
