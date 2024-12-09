@@ -1,0 +1,274 @@
+Descriptor:
+  Name: User Enrichment
+  DisplayName: User Enrichment KQL Skills
+  Description: A comprehensive set of skills designed to enhance security investigations by providing detailed insights into user activities. This plugin family focuses on analyzing sign-in behavior, detecting anomalies, tracking password changes, monitoring multi-factor authentication modifications, and verifying user location information. By leveraging these skills, security teams can identify potential threats, ensure compliance with security policies, and protect organizational assets from unauthorized access.
+
+SkillGroups:
+  - Format: KQL
+    Skills:
+      - Name: UnusualSigninActivity
+        DisplayName: User Enrichment - Identify Unusual Sign-in Activity
+        Description: |- 
+          - Analyze sign-in logs for unusual login activity, including high-risk locations, high failure rates, and sudden changes in device/application usage.
+          - Focus on patterns related to IP addresses, device IDs, user agents, and applications.
+          - Summarize login activity and highlight deviations from normal behavior.
+          - Recommend actions for anomalies (e.g., password reset, MFA review, security review).
+          - If no anomalies, confirm consistent activity.
+        Inputs:
+          - Name: upn
+            Description: User principle name. i.e., mscott@test.com
+            Required: true
+        Settings:
+          Target: Defender
+          Template: |-
+            // This query checks the last 30 days of sign-in activity for a specified user.
+            // It analyzes login patterns, focusing on anomalies such as high failure rates, sign-ins from unfamiliar IPs or devices, or abnormal client applications.
+            // Deviations from the usual patterns may indicate suspicious activity, prompting security actions like MFA review or password reset.
+            // The output includes IP addresses, device IDs, and user agents to assist in identifying unusual behavior.
+            let UPN = "{{upn}}";  // Replace with the specific users upn
+            let TimeFrame = ago(30d); 
+            // Retrieve and summarize the user's login activity, focusing on successful vs failed attempts and identifying unusual patterns.
+            SigninLogs 
+            | where TimeGenerated > TimeFrame
+            | where UserPrincipalName =~ UPN
+            | summarize FirstSeen = min(TimeGenerated), LastObserved = max(TimeGenerated), SuccessfullCount = count(ResultType = 0), FailureCount = count(ResultType != 0) 
+            by UserPrincipalName, IPAddress, Location, tostring(DeviceDetail.deviceId), UserAgent, ClientAppUsed, AppDisplayName
+
+      - Name: PasswordChangeCount
+        DisplayName: User Enrichment - Password Change Count
+        Description: |- 
+          - Detect and analyze the number of password changes for a user over the past 7 days.
+          - Identify potential threats like account compromise or phishing attacks, focusing on multiple changes within short timeframes.
+          - Summarize frequency, timing, and context of changes, and highlight any anomalies.
+          - If anomalies are detected, recommend actions such as MFA enforcement or a security review.
+          - If no anomalies, confirm consistent behavior.
+        Inputs:
+          - Name: upn
+            Description: User principle name. i.e., mscott@test.com
+            Required: true
+        Settings:
+          Target: Defender
+          Template: |-
+            // This query tracks password changes for a specific user over the last seven days.
+            // It highlights suspicious behavior, such as multiple password changes in a short timeframe or changes following failed login attempts.
+            // Anomalies can indicate account compromise or unauthorized access, prompting security actions like MFA enforcement or password resets.
+            // The output includes the number and timing of password changes, helping detect unusual activity.
+            let TimeFrame = ago(7d);
+            let upn = "{{upn}}";  // Replace with the specific users upn
+            AuditLogs
+            | where TimeGenerated > TimeFrame
+            | where OperationName == "Change user password"
+            | extend TargetResourcesJson = parse_json(tostring(TargetResources))
+            | mv-expand TargetResource = TargetResourcesJson
+            | extend userPrincipalName = tostring(TargetResource.userPrincipalName)
+            | where userPrincipalName == upn
+            | summarize PasswordChangeCount = count() by bin(TimeGenerated, 1d), userPrincipalName
+            | project TimeGenerated, PasswordChangeCount, userPrincipalName
+            | order by TimeGenerated desc
+
+      - Name: RecentMFAChanges
+        DisplayName: User Enrichment - Recent MFA changes
+        Description: |- 
+          - Investigate recent MFA changes, tracking additions, removals, or modifications of methods.
+          - Identify potential risks, such as unauthorized access or account compromise.
+          - Summarize changes and highlight anomalies.
+          - Recommend actions like re-authentication or a security review.
+          - If no anomalies are found, confirm consistency.
+        Inputs:
+          - Name: upn
+            Description: User principle name. i.e., mscott@test.com
+            Required: true
+        Settings:
+          Target: Defender
+          Template: |-
+            // This query investigates MFA changes for a user over the past seven days, tracking additions, removals, or modifications.
+            // Unusual changes can indicate unauthorized access or account compromise, prompting further actions like MFA reviews or security checks.
+            // The query extracts detailed logs of MFA changes, including timestamps, the actor responsible for the change, and modified methods.
+            // The query helps detect suspicious changes and prompts recommended actions.
+            let AuthenticationMethods = dynamic(["TwoWayVoiceMobile","TwoWaySms","TwoWayVoiceOffice","TwoWayVoiceOtherMobile","TwoWaySmsOtherMobile","OneWaySms","PhoneAppNotification","PhoneAppOTP"]);
+            let TimeFrame = ago(7d);
+            let UPN = "{{upn}}"; // Replace with the specific users upn
+            // This segment retrieves MFA-related changes from CloudAppEvents, focusing on modifications to strong authentication methods.
+            let AuthenticationMethodChanges = CloudAppEvents
+            | where ActionType == "Update user." and RawEventData contains "StrongAuthenticationMethod"
+            | where Timestamp > TimeFrame
+            | extend Target = tostring(RawEventData.ObjectId)
+            | where Target == UPN
+            | extend Actor = tostring(RawEventData.UserId)
+            | mv-expand ModifiedProperties = parse_json(RawEventData.ModifiedProperties)
+            | where ModifiedProperties.Name == "StrongAuthenticationMethod"
+            | project Timestamp, Actor, Target, ModifiedProperties, RawEventData, ReportId;
+            // Extract old values (before the MFA method was changed) to compare with new values.
+            let OldValues = AuthenticationMethodChanges
+            | extend OldValue = parse_json(tostring(ModifiedProperties.OldValue))
+            | mv-apply OldValue on (extend Old_MethodType=tostring(OldValue.MethodType), Old_Default=tostring(OldValue.Default) | sort by Old_MethodType);
+            // Extract new values (after the MFA method was changed) for comparison with the old values.
+            let NewValues = AuthenticationMethodChanges
+            | extend NewValue = parse_json(tostring(ModifiedProperties.NewValue))
+            | mv-apply NewValue on (extend New_MethodType=tostring(NewValue.MethodType), New_Default=tostring(NewValue.Default) | sort by New_MethodType);
+            // Identify removed MFA methods by comparing old methods with new ones.
+            let RemovedMethods = AuthenticationMethodChanges
+            | join kind=inner OldValues on ReportId
+            | join kind=leftouter NewValues on ReportId, $left.Old_MethodType == $right.New_MethodType
+            | project Timestamp, ReportId, ModifiedProperties, Actor, Target, Old_MethodType, New_MethodType
+            | where Old_MethodType != New_MethodType
+            | extend Action = strcat("Removed (", AuthenticationMethods[toint(Old_MethodType)], ") from Authentication Methods.")
+            | extend ChangedValue = "Method Removed";
+            // Identify added MFA methods by comparing new methods with old ones.
+            let AddedMethods = AuthenticationMethodChanges
+            | join kind=inner NewValues on ReportId
+            | join kind=leftouter OldValues on ReportId, $left.New_MethodType == $right.Old_MethodType
+            | project Timestamp, ReportId, ModifiedProperties, Actor, Target, Old_MethodType, New_MethodType
+            | where Old_MethodType != New_MethodType
+            | extend Action = strcat("Added (", AuthenticationMethods[toint(New_MethodType)], ") as Authentication Method.")
+            | extend ChangedValue = "Method Added";
+            // Track changes to the default authentication method.
+            let DefaultMethodChanges = AuthenticationMethodChanges
+            | join kind=inner OldValues on ReportId
+            | join kind=inner NewValues on ReportId
+            | where Old_Default != New_Default and Old_MethodType == New_MethodType and New_Default == "true"
+            | join kind=inner OldValues on ReportId | where Old_Default1 == "true" and Old_MethodType1 != New_MethodType | extend Old_MethodType = Old_MethodType1
+            | extend Action = strcat("Default Authentication Method was changed to (", AuthenticationMethods[toint(New_MethodType)], ").")
+            | extend ChangedValue = "Default Method";
+            // Combine the results of added, removed, and default method changes into a single output.
+            union RemovedMethods, AddedMethods, DefaultMethodChanges
+            | project Timestamp, Action, Actor, Target, ChangedValue, OldValue=case(isempty(Old_MethodType), "", strcat(Old_MethodType, ": ", AuthenticationMethods[toint(Old_MethodType)])), NewValue=case(isempty(New_MethodType), "", strcat(New_MethodType, ": ", AuthenticationMethods[toint(New_MethodType)]))
+            | distinct *
+
+      - Name: UserHomeOfficeLocation
+        DisplayName: User Enrichment - User home office location
+        Description: |- 
+          - Retrieve and analyze home office location details (city, country, state) for a user.
+          - Compare the user's typical home office location to recent sign-in activity.
+          - Highlight any deviations between expected and actual sign-in locations, as this may indicate unauthorized access or account compromise.
+          - Provide actionable insights, such as recommending additional authentication or a security review.
+          - If no deviations are found, confirm consistency in location patterns.
+        Inputs:
+          - Name: upn
+            Description: User principle name. i.e., mscott@test.com
+            Required: true
+        Settings:
+          Target: Defender
+          Template: |-
+            // This query retrieves the home office location details (city, country, state) for a specific user.
+            // It helps verify user location consistency by comparing this information to recent sign-in activity.
+            // Deviations between the user's home office location and actual sign-in locations could indicate suspicious behavior or account compromise.
+            // Provide insights on potential discrepancies and recommend further actions such as enforcing additional authentication if necessary.
+            IdentityInfo
+            | where AccountUpn == "{{upn}}"  // Replace with the specified user's email (UPN)
+            | project City, Country, State  // Extract city, country, and state from the identity information
+            | distinct *  // Remove duplicate entries and provide unique location information
+
+      - Name: UserSigninBaseline
+        DisplayName: User Enrichment - User baseline information
+        Description: |- 
+          - Establish a baseline for a user's sign-in activity by identifying the most frequently used IP address, location, device, application, and client application over the past 30 days.
+          - Use this baseline to detect deviations from typical user behavior, which may indicate security incidents, such as unauthorized access or account compromise.
+          - Provide actionable insights, highlighting deviations that require further investigation or security measures, like MFA enforcement or a security review.
+          - If no anomalies are found, confirm the user's activity is consistent.
+        Inputs:
+          - Name: upn
+            Description: User principle name. i.e., mscott@test.com
+            Required: true
+        Settings:
+          Target: Defender
+          Template: |-
+            // This query establishes a baseline for a user's sign-in activity over the past 30 days by identifying the most frequently used IP address, location, device, application, and client application.
+            // It helps detect deviations that may indicate suspicious behavior, such as sign-ins from unfamiliar locations, new devices, or different apps.
+            // Anomalies can point to account compromise or unauthorized access, triggering actions like MFA enforcement or security reviews.
+            // The query outputs the user's typical behavior patterns and highlights any deviations.
+            // Provide a summary of the users baseline and analyze any deviations, recommending actions like enforcing MFA, resetting credentials, or initiating further security reviews if abnormal patterns are detected.            
+            let UPN = "{{upn}}"; // Replace with the specific users email
+            let TimeFrame = ago(30d);
+            // Identify the most frequently used IP address for the user.
+            let MostCommonIP = toscalar(
+                SigninLogs
+                | where TimeGenerated > TimeFrame
+                | where UserPrincipalName =~ UPN
+                | summarize IPCount = count() by IPAddress
+                | top 1 by IPCount desc
+                | project IPAddress
+            );
+            // Identify the most frequently used location (e.g., city, country) for the user.
+            let MostCommonLocation = toscalar(
+                SigninLogs
+                | where TimeGenerated > TimeFrame
+                | where UserPrincipalName =~ UPN
+                | summarize LocationCount = count() by Location
+                | top 1 by LocationCount desc
+                | project Location
+            );
+            // Identify the most frequently used device ID for the user.
+            let MostCommonDeviceId = toscalar(
+                SigninLogs
+                | where TimeGenerated > TimeFrame
+                | where UserPrincipalName =~ UPN
+                | summarize DeviceCount = count() by tostring(DeviceDetail.deviceId)
+                | top 1 by DeviceCount desc
+                | project tostring(DeviceDetail_deviceId)
+            );
+            // Identify the most frequently used application for the user.
+            let MostCommonApp = toscalar(
+                SigninLogs
+                | where TimeGenerated > TimeFrame
+                | where UserPrincipalName =~ UPN
+                | summarize AppCount = count() by AppDisplayName
+                | top 1 by AppCount desc
+                | project AppDisplayName
+            );
+            // Identify the most frequently used client application for the user.
+            let MostCommonClientApp = toscalar(
+                SigninLogs
+                | where TimeGenerated > TimeFrame
+                | where UserPrincipalName =~ UPN
+                | summarize ClientAppCount = count() by ClientAppUsed
+                | top 1 by ClientAppCount desc
+                | project ClientAppUsed
+            );
+            // Print the baseline details for the user, including the most common IP, location, device, app, and client app.
+            print 
+                UserPrincipalName = UPN,
+                MostCommonIPAddress = MostCommonIP,
+                MostCommonLocation = MostCommonLocation,
+                MostCommonDeviceId = MostCommonDeviceId,
+                MostCommonApp = MostCommonApp,
+                MostCommonClientApp = MostCommonClientApp
+
+      - Name: Suspicious Mailbox Activities
+        DisplayName: User Enrichment - Suspicious Mailbox Activities
+          Description: |- 
+          - Investigate any recent Mailbox Permission for this User
+          - Are there any rules created or modified that could redirect or filter emails in a suspicious manner?
+          - Focus on identifying any newly created rules that may redirect incoming emails to unusual folders or external addresses, as this could indicate an attempt to manipulate email flow for malicious purposes
+          - If no anomalies are found, confirm the user's activity is consistent.
+        Inputs:
+          - Name: upn
+            Description: User principle name. i.e., mscott@test.com
+            Required: true
+        Settings:
+          Target: Defender
+          Template: |-
+            // Mailbox Investigation of suspicious users. To detect potential suspicious activities, we filter Exchange Online action types that could be used for exfiltration and BEC. This allows us to investigate whether the targeted end-user is involved in any suspicious actions. 
+            // Examine activities of a user from Suspicious Mailbox actions and UPN risk in Entra Id and Defender           
+            let UPN = "{{UPN}}"; // Replace with the specific users email
+            let TimeFrame = ago(30d);
+            // Identify the most frequently used IP address for the user.
+            CloudAppEvents
+             | where TimeGenerated > TimeFrame
+              | extend parsed = parse_json(RawEventData)
+              | where ActionType in ("Add-MailboxPermission", "New-ManagementRoleAssignment", "Add-MailboxFolderPermission", "New-InboxRule", "Set-InboxRule", "Set-Mailbox", "New-TransportRule", "Set-TransportRule")
+              | where isnotempty(RawEventData.UserId)
+              | where isnotempty(RawEventData.ObjectId)
+              | extend parsed = parse_json(RawEventData)
+              | extend UPN = tostring(parsed.UserId)
+              | where UPN =~ UPN         
+              | extend Parameters = parsed.Parameters
+              | mv-expand Parameters
+              | extend Name = tostring(Parameters.Name)
+              | extend Value = tostring(Parameters.Value)
+              | extend packed = pack(Name, Value)
+              | where Parameters has_any("DeleteMessage") or (Parameters has_any("MoveToFolder") and Parameters has_any("Conversation History"))
+              | summarize PackedInfo = make_bag(packed), ActionType=any(ActionType) by UPN, AccountObjectId, IPAddress, ISP, ReportId, TimeGenerated
+              | evaluate bag_unpack(PackedInfo)
+            
+      
