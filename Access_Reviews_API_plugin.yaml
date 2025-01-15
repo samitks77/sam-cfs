@@ -27,5 +27,23 @@ paths:
                         description: OK
                         content:
                             application/json:
-                                
-    
+
+    /users/{userIdentifier}/licenseDetails:
+        get:
+            operationId: Retrieve the license details of a user
+            description: Fetch the license details assigned to a user in Entra ID.
+            parameters:
+                - in: path
+                  name: userIdentifier
+                  schema:
+                      type: string
+                  required: true
+                  description: The unique identifier (id) or userPrincipalName of the user to retrieve.
+            requestBody:
+                required: true
+                description: Fetch the license details assigned to a user in Entra ID.
+                responses:
+                    "200":
+                        description: OK
+                        content:
+                            application/json:
