@@ -8,10 +8,10 @@ servers:
     - url: https://graph.microsoft.com/v1.0
      
 paths:
-    /users/{userIdentifier}/memberOf:
+    /users/{userIdentifier}/transitiveMemberOf:
         get:
-            operationId: Retrieve the memberOf relationships of a user
-            description: Fetch the groups and directory roles a user is a member of in Entra ID.
+            operationId: Retrieve Transitive MemberOf of a user
+            description: Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitive memberships include both direct and indirect memberships, such as those assigned via group nesting. 
             parameters:
                 - in: path
                   name: userIdentifier
@@ -47,3 +47,5 @@ paths:
                         description: OK
                         content:
                             application/json:
+                                
+    
