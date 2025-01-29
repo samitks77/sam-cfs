@@ -11,7 +11,8 @@ paths:
     /users/{userIdentifier}/transitiveMemberOf:
         get:
             operationId: RetrieveTransitiveMemberOf
-            description: (Skill: Retrieve Transitive MemberOf of a user) Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitive memberships include both direct and indirect memberships, such as those assigned via group nesting. 
+            displayName: RetrieveTransitiveMemberOf (Skill: RetrieveTransitiveMemberOf)
+            description: Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitive memberships include both direct and indirect memberships, such as those assigned via group nesting. 
             descriptionForModel: Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitive memberships include both direct and indirect memberships, such as those assigned via group nesting. 
             parameters:
                 - in: path
@@ -32,6 +33,7 @@ paths:
     /users/{userIdentifier}/licenseDetails:
         get:
             operationId: RetrieveTheLicenseDetailsOfaUser
+            displayName: RetrieveTheLicenseDetailsOfaUser (Skill: RetrieveTheLicenseDetailsOfaUser)
             description: (Skill: RetrieveTheLicenseDetailsOfaUser) Fetch the license details assigned to a user in Entra ID.
             descriptionForModel: Fetch the license details assigned to a user in Entra ID.
             parameters:
