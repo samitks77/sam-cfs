@@ -3,52 +3,53 @@ openapi: 3.0.0
 info:
     title: EntraID Access Review Plugin
     description: The skills in this plugin will help create access reviews in EntraID, including User details like groups, licenses via Graph API Call
-    version: "v1"
+    version: "v1.0.6"
 servers:
     - url: https://graph.microsoft.com/v1.0
-
+     
 paths:
-    /users/{userIdentifier}/transitiveMemberOf:
-        get:
-            operationId: RetrieveTransitiveMemberOf
-            displayName: RetrieveTransitiveMemberOf (Skill: RetrieveTransitiveMemberOf)
-            description: Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitive memberships include both direct and indirect memberships, such as those assigned via group nesting. 
-            descriptionForModel: Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitive memberships include both direct and indirect memberships, such as those assigned via group nesting. 
-            parameters:
-                - in: path
-                  name: userIdentifier
-                  schema:
-                      type: string
-                  required: true
-                  description: The unique identifier (id) or userPrincipalName of the user to retrieve.
-            requestBody:
-                required: true
-                description: Fetch the groups and directory roles a user is a member of in Entra ID.
-                responses:
-                    "200":
-                        description: OK
-                        content:
-                            application/json:
+  /users/{userIdentifier}/transitiveMemberOf:
+    get:
+      operationId: RetrieveTransitiveMemberOf
+      displayName: Retrieve transitive member details (Skill:RetrieveTransitiveMemberOf)
+      description: Fetch all transitive memberships details for a user.
+      descriptionForModel: Fetch all transitive memberships of a user, including groups and directory roles in Entra ID. Transitivmemberships include both direct and indirect memberships, such as those assigned via group nesting. 
+      parameters:
+        - in: path
+          name: userIdentifier
+          schema:
+            type: string
+          required: true
+          description: The unique identifier (id) or userPrincipalName of the user to retrieve.
+      requestBody:
+          required: true
+          description: Fetch the groups and directory roles a user is a member of in Entra ID.
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad request, invalid parameters
 
-    /users/{userIdentifier}/licenseDetails:
-        get:
-            operationId: RetrieveTheLicenseDetailsOfaUser
-            displayName: RetrieveTheLicenseDetailsOfaUser (Skill: RetrieveTheLicenseDetailsOfaUser)
-            description: (Skill: RetrieveTheLicenseDetailsOfaUser) Fetch the license details assigned to a user in Entra ID.
-            descriptionForModel: Fetch the license details assigned to a user in Entra ID.
-            parameters:
-                - in: path
-                  name: userIdentifier
-                  schema:
-                      type: string
-                  required: true
-                  description: The unique identifier (id) or userPrincipalName of the user to retrieve.
-            requestBody:
-                required: true
-                description: Fetch the license details assigned to a user in Entra ID.
-                responses:
-                    "200":
-                        description: OK
-                        content:
-                            application/json:
- 
+  /users/{userIdentifier}/licenseDetails:
+    get:
+      operationId: RetrieveTheLicenseDetailsOfUser
+      displayName: Retrieve the license details of a user (Skill:RetrieveTheLicDetailsOfUser)
+      description: Fetch the license details assigned to a user in Entra ID.
+      descriptionForModel: Fetch the license details assigned to a user in Entra ID.
+      parameters:
+        - in: path
+          name: userIdentifier
+          schema:
+            type: string
+          required: true
+          description: The unique identifier (id) or userPrincipalName of the user to retrieve.
+      requestBody:
+        required: true
+        description: Fetch the license details assigned to a user in Entra ID.
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad request, invalid parameters
+
+  
