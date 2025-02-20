@@ -460,7 +460,10 @@ paths:
                   schema:
                       type: string
                   required: true
-                  content:
+                  description: eDiscoverySearchId in eDiscovery
+            requestBody:
+                required: true
+                content:
                     application/json:
                         schema:
                             type: object
