@@ -10,8 +10,15 @@ servers:
 paths:
     /ediscoveryCases:
         post:
-            operationId: Create eDiscovery case in Purview
-            description: Create eDiscovery case based on user supplied name
+            operationId: AddCustodianToediscoveryCaseInPurview
+            description: Create eDiscovery case based on user supplied name.
+            descriptionForModel: This operation creates a new eDiscovery case in Purview by accepting key details such as displayName, description, and externalId, which can be used to trigger further case-specific workflows.
+            examplePrompts:
+              - Create a new eDiscovery case called "InvestigationCase".
+              - Create eDiscovery case in Purview with the Case name "Test-AS-Feb20-V2"
+              - Initiate an eDiscovery case in Purview with the name "Case2025".
+              - Start an eDiscovery case and set the external ID for reference.
+              - Generate an eDiscovery case with description "Data breach investigation".
             requestBody:
                 required: true
                 content:
@@ -38,8 +45,15 @@ paths:
                                 
     /ediscoveryCases/{ediscoveryCaseId}/custodians:
         post:
-            operationId: Add custodian to eDiscovery case in Purview
+            operationId: AddCustodianToediscoveryCaseInPurview
             description: Add custodian to eDiscovery case in Purview
+            descriptionForModel: This operation adds a new custodian to an existing eDiscovery case in Purview. It accepts the custodian's email address and associates it with the specified case, enabling further case-specific workflows.
+            examplePrompts:
+              - Add custodian with email "user@example.com" to eDiscovery case name "12345".
+              - Include custodian "john.doe@example.com" in the case with name "case6789".
+              - Assign custodian "alice@example.com" to the eDiscovery case named "LegalInvestigation".
+              - Register custodian "bob@example.com" under the eDiscovery case called "ComplianceReview".
+              - Add custodian to the eDiscovery case in Purview, use the case id from above and add this email for the custodian "john.doe@example.com".
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -67,8 +81,15 @@ paths:
                         
     /ediscoveryCases/{ediscoveryCaseId}/custodians/{custodianId}/userSources:
         post:
-            operationId: Add new userSource object associated with an eDiscovery custodian
-            description: Add a new userSource object associated with an eDiscovery custodian in Purview
+            operationId: AddUserSourceToCustodianInediscoveryCase
+            description: Add a new userSource object associated with an eDiscovery custodian in Purview.
+            descriptionForModel: This operation creates a new userSource for a specified custodian within an eDiscovery case in Purview. It requires the custodian's email address and a list of included sources (e.g., mailbox, site) to be specified, enabling further data collection and processing for the case.
+            examplePrompts:
+              - Add a userSource for custodian "jane.doe@example.com" with sources "mailbox, site" to the eDiscovery case "Case123".
+              - Include userSource for custodian "john.doe@example.com" with sources "mailbox, site" in the eDiscovery case.
+              - Register a new userSource for custodian "alice@example.com" including sources "mailbox, site" in the case.
+              - Assign userSource to custodian "bob@example.com" with included sources "mailbox, site" for the eDiscovery case.
+              - add new userSource object associated with the eDiscovery custodian id in the above prompt, include this custodian email "example@example.com" and Mailbox, site for sources. In the results include userSourceID, CustodianID and all additional details.
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -141,8 +162,15 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/custodians/applyHold:
         post:
-            operationId: Applying hold on eDiscovery custodians
-            description: Applying hold on eDiscovery custodians in Purview
+            operationId: ApplyHoldOnediscoveryCustodians
+            description: Applying hold on eDiscovery custodians in Purview.
+            descriptionForModel: This operation applies a hold on custodians within an eDiscovery case in Purview. It accepts a comma-separated list of custodian IDs to hold and returns the location URL of the hold operation.
+            examplePrompts:
+              - Apply hold on custodian "user@example.com" in the eDiscovery case "Case123".
+              - Place a hold on custodian "john.doe@example.com" in the case with name "LegalReview".
+              - Initiate a hold on custodians with IDs "id1,id2" for eDiscovery case 'Investigation2025'.
+              - Apply hold on custodian "alice@example.com" in the eDiscovery case "ComplianceCheck".
+              - Apply hold using the above Case Id and Custodian ID. 
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -182,8 +210,24 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/searches:
         post:
-            operationId: Add a new ediscoverySearch object
-            description: Add a new ediscoverySearch object in Purview
+            operationId: AddeDiscoverySearchObject
+            description: Add a new ediscoverySearch object in Purview.
+            descriptionForModel: This operation creates a new ediscoverySearch object in Purview, enabling users to define search parameters for retrieving case-related data. It requires a displayName, while additional properties such as description, contentQuery, and dataSourceScopes are optional.
+            examplePrompts:
+              - Create a new ediscovery search with display name 'InvestigationSearch' for case "Case123".
+              - Add an ediscovery search named "DataReview" with a query string in the case "Case456".
+              - Initiate an ediscovery search with display name "ComplianceSearch" in the specified case."
+              - Generate an ediscovery search in case "LegalCase2025' with display name "LegalReviewSearch".
+              - "Create an eDiscovery search that retrieves all email activity, all OneDrive content interactions, and all Teams instant messaging communications across the organization. Example \"contentQuery\": \"(kind=email) OR (Path:\\\"onedrive\\\") OR (kind=IM)\""
+              - "Generate a content search to find all emails and OneDrive files that contain the keyword 'Confidential' in the subject, body, or filename. Example \"contentQuery\": \"(kind=email AND subject:Confidential) OR (Path:\\\"onedrive\\\" AND filename:Confidential)\""
+              - "Create a search that retrieves all Teams instant messages where users discussed 'Project X' in chat conversations. Example \"contentQuery\": \"(kind=IM AND body:\\\"Project X\\\")\""
+              - "Find all emails sent by Alice (example@example.com), including those she sent internally and externally. Example \"contentQuery\": \"(kind=email AND from:alice@contoso.com)\""
+              - "Generate a search to locate all files in OneDrive that were created or shared by John Doe (john.doe@example.com). Example \"contentQuery\": \"(Path:\\\"onedrive\\\") AND (Author:john.doe@example.com)\""
+              - "Find all emails that contain one or more attachments, regardless of file type or sender. Example \"contentQuery\": \"(kind=email AND hasAttachments:true)\""
+              - "Retrieve all emails and Teams messages exchanged between Example 1 (example1@example.com) and Answer 1 (answer1@example.com) to track their collaboration. Example \"contentQuery\": \"(kind=email AND (from:example1@example.com AND to:answer1@example.com)) OR (kind=IM AND (participants:example1@example.com AND participants:answer1@example.com))\""
+              - "Generate a search to retrieve all emails sent between January 1, 2024, and March 31, 2024, across the organization. Example \"contentQuery\": \"(kind=email AND sent>=01/01/2024 AND sent<=03/31/2024)\""
+              - "Find all PDF files stored in OneDrive, regardless of who created or modified them. Example \"contentQuery\": \"(Path:\\\"onedrive\\\" AND filetype:pdf)\""
+              - "Locate all Teams instant messages where users discussed 'budget' to identify financial planning conversations. Example \"contentQuery\": \"(kind=IM AND body:\\\"budget\\\")\""
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -220,8 +264,15 @@ paths:
     
     /ediscoveryCases/{ediscoveryCaseId}/custodians/updateIndex:
         post:
-            operationId: Add a new indexOperation object
+            operationId: AddIndexOperationForCustodians
             description: Add the process of indexing data sources, including custodians and noncustodial data sources in Purview for all custodians attached to a case
+            descriptionForModel: This operation initiates the indexing process for data sources associated with all custodians attached to a specific eDiscovery case in Purview. It accepts an optional list of custodian IDs to limit the indexing scope, facilitating improved search and retrieval capabilities.
+            examplePrompts:
+              examplePrompts:
+                - Initiate indexing for all custodians in the eDiscovery case "Case123".
+                - Start the index operation for custodians with IDs "id1,id2" in eDisocvery case "InvestigationCase".
+                - Trigger the indexing process for all custodians in the case "LegalReview".
+                - Run an index operation for custodians in eDiscovery case "Compliance2025" with specific custodian IDs.
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -262,8 +313,14 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/custodians/{custodianId}/updateIndex:
         post:
-            operationId: Add a new indexOperation object for a specific custodian
-            description: Add the process of indexing data sources, including custodians and noncustodial data sources in Purview for specific custodian
+            operationId: AddIndexOperationForSpecificCustodian
+            description: Add the process of indexing data sources, including custodians and noncustodial data sources in Purview for specific custodian.
+            descriptionForModel: This operation initiates an indexing process for a specific custodian within an eDiscovery case in Purview. It accepts an optional custodian ID to limit the indexing to that particular custodian, enabling targeted data retrieval and improved search capabilities.
+            examplePrompts:
+              - Initiate an index operation for custodian 'user@example.com' in the eDiscovery case "Case123".
+              - Start indexing for specific custodian with ID "custodianID123" in case "LegalReview".
+              - Trigger an indexing process for custodian "alice@example.com" in the eDiscovery case "Investigation2025".
+              - Run an index operation for custodian with ID "custID456" in the above specified case.
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -308,8 +365,15 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/searches/{ediscoverySearchId}/estimateStatistics: 
         post:
-            operationId: Run an estimate in the eDiscovery search
+            operationId: RunEstimateInEdiscoverySearch
             description: Run an estimate of the number of emails and documents in the eDiscovery search
+            descriptionForModel: This operation initiates an estimation process for an eDiscovery search, calculating the number of emails and documents that match the search criteria. The response includes a Location header that provides the URL for tracking the estimate operation.
+            examplePrompts:
+              - Run an estimate for eDiscovery search "Search123" in case "CaseABC".
+              - Estimate the number of emails and documents for search "InvestigationSearch" in case "Case456".
+              - Initiate an estimate for eDiscovery search "ComplianceSearch" and track the estimate location.
+              - Estimate results for eDiscovery search "LegalReview" in case "Case789".
+              - "Run an estimate on the number of emails and documents in eDiscovery search for this Search ID: \\{Search ID\\}\""
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -340,8 +404,15 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/reviewSets:
         post:
-            operationId: Create a new ediscovery ReviewSet object
+            operationId: CreateediscoveryReviewSetObject
             description: Create new ediscoveryReviewSet object in Purview
+            descriptionForModel: This operation creates a new ediscovery review set within a specified eDiscovery case in Purview. It requires the display name of the review set and triggers further workflows for managing review sets.
+            examplePrompts:
+              - Create a new ediscovery review set named "ReviewSet1" in case "Case123".
+              - Initiate a review set called "InvestigationReview" for case "Case456".
+              - Add a new review set with display name "LegalReview" to the eDiscovery case "Case789".
+              - Generate a review set named "ComplianceReview" for the case "CaseABC".
+              - Create a new eDiscovery review set in the above case id with the name "ReviewSet1".
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -369,8 +440,15 @@ paths:
                         
     /ediscoveryCases/{ediscoveryCaseId}/reviewSets/{eDiscoveryReviewSetId}/export:
         post:
-            operationId: Initiate an export from a ediscoveryReviewSet
+            operationId: InitiateExportFromEdiscoveryReviewSet
             description: Initiate an export from a ediscoveryReviewSet in Purview
+            descriptionForModel: This operation starts the export process for an ediscovery review set within a specified eDiscovery case in Purview. It requires an outputName (and optionally description, exportOptions, and exportStructure) to initiate the export. The response includes a Location header with the URL to track the export operation.
+            examplePrompts:
+              - Initiate an export for review set "ExportSet1" in case "Case123" and return the export operation location.
+              - Start export of review set "LegalReview" in case "Case456" and provide the location URL of the operation.
+              - Export review set "ComplianceSet" from case "Case789" and get the export operation location in the response.
+              - Run an export for review set "InvestigationExport" in case "CaseABC" and fetch the export location.
+              - Use the Case ID & ReviewSetId from above and initiate an export with the outputName "ExportSet1".
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -419,8 +497,15 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/operations:
         get:
-            operationId: Get a list of the caseOperation objects
-            description: Get a list of the caseOperation objects and their properties in Purview
+            operationId: GetCaseOperationObjects
+            description: Get a list of the caseOperation objects and their properties in Purview.
+            descriptionForModel: This operation retrieves a list of caseOperation objects for a specified eDiscovery case in Purview. The response includes detailed properties of each operation and a Location header with a URL for tracking further actions.
+            examplePrompts:
+              - Retrieve all case operations for eDiscovery case "Case123".
+              - Fetch case operations for case "InvestigationCase" and check the response location header.
+              - List operations for eDiscovery case "ComplianceReview" and note the export operation location.
+              - Get case operations for eDiscovery case "CaseABC" and verify the location URL in the response.
+              - Use the Case ID from above, get a list of the caseOperation objects and their properties
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -446,8 +531,23 @@ paths:
 
     /ediscoveryCases/{ediscoveryCaseId}/searches/{ediscoverySearchId}/exportResult:
         post:
-            operationId: Run the export from eDiscovery search
-            description: Run the export from the eDiscovery search
+            operationId: RunExportFromEdiscoverySearch
+            description: Run the export from the eDiscovery search.
+            descriptionForModel: This operation initiates the export process for an eDiscovery search, generating export results based on the provided criteria. It requires a displayName, exportCriteria, and exportFormat, with additionalOptions available optionally. The response includes a Location header with the URL of the export operation.
+            examplePrompts:
+              - Run the export for eDiscovery search "SearchXYZ" in case "Case123" and return the export location.
+              - Export the results for eDiscovery search "InvestigationSearch" in case "Case456" and include the response's Location header.
+              - Initiate export for eDiscovery search "ComplianceSearch" in case "Case789" with displayName "Export1", exportCriteria "searchHits", and exportFormat "pst", then check the export location in the response.
+              - Run export for eDiscovery search "LegalReview" in case "CaseABC" and verify the location URL provided in the response.
+              - "Initiate an export from the above Search, use this Search ID: \\{Search ID\\}, and this Case ID = \\{Case ID\\}. Additional parameters include, displayName= \\\"Export 1 - simple PST-V2\\\", exportCriteria = \\\"searchHits\\\", additionalOptions = \\\"none\\\", and exportFormat = \\\"pst\\\""
+              - "Initiate an export of the search results using the default PST format and include all available data. Example \"exportOptions\": \"{exportFormat:\\\"pst\\\", exportCriteria:\\\"allContent\\\", additionalOptions:\\\"none\\\"}\""
+              - "Export all search hits for a specific eDiscovery case in PST format. Example \"exportOptions\": \"{exportFormat:\\\"pst\\\", exportCriteria:\\\"searchHits\\\", additionalOptions:\\\"none\\\"}\""
+              - "Generate an export of all Exchange email results in CSV format for further review. Example \"exportOptions\": \"{exportFormat:\\\"csv\\\", exportCriteria:\\\"emailsOnly\\\", additionalOptions:\\\"none\\\"}\""
+              - "Create a ZIP export of all documents found in OneDrive related to the search. Example \"exportOptions\": \"{exportFormat:\\\"zip\\\", exportCriteria:\\\"documentsOnly\\\", additionalOptions:\\\"none\\\"}\""
+              - "Export all search results but exclude unindexed items from the export. Example \"exportOptions\": \"{exportFormat:\\\"pst\\\", exportCriteria:\\\"allContent\\\", additionalOptions:\\\"excludeUnindexedItems\\\"}\""
+              - "Initiate an export in PST format while preserving all metadata for legal review. Example \"exportOptions\": \"{exportFormat:\\\"pst\\\", exportCriteria:\\\"allContent\\\", additionalOptions:\\\"preserveMetadata\\\"}\""
+              - "Export only emails with attachments in CSV format for filtering and processing. Example \"exportOptions\": \"{exportFormat:\\\"csv\\\", exportCriteria:\\\"emailsWithAttachments\\\", additionalOptions:\\\"none\\\"}\""
+              - "Perform an export including both emails and documents, excluding encrypted files. Example \"exportOptions\": \"{exportFormat:\\\"pst\\\", exportCriteria:\\\""
             parameters:
                 - in: path
                   name: ediscoveryCaseId
@@ -489,10 +589,9 @@ paths:
                     description: OK
                 headers:
                     location:
-                        description: The response contains also a Location header, which contains the location of the Export operation that was created to handle the export.
+                        description: If successful, this method returns a 200 OK response code and a collection of microsoft.graph.security.caseOperation objects in the response body
                         schema:
                             type: string
                         example: "https://graph.microsoft.com/v1.0/security/cases/ediscoverycases('{ediscoveryCaseId}')/operations('{ediscoverySearchId}')"
                 content:
                     application/json:
-                
