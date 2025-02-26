@@ -10,7 +10,7 @@ servers:
 paths:
     /ediscoveryCases:
         post:
-            operationId: AddCustodianToediscoveryCaseInPurview
+            operationId: CreateeDiscoverycaseinPurview
             description: Create eDiscovery case based on user supplied name.
             descriptionForModel: This operation creates a new eDiscovery case in Purview by accepting key details such as displayName, description, and externalId, which can be used to trigger further case-specific workflows.
             examplePrompts:
