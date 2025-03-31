@@ -1,0 +1,78 @@
+openapi: 3.0.1
+info:
+  title: Microsoft Graph Security - Remediate Analyzed Emails
+  description: Plugin to call Microsoft Graph's security API to remediate analyzed emails.
+  version: "1.0.0"
+servers:
+  - url: https://graph.microsoft.com/beta
+paths:
+  /security/collaboration/analyzedEmails/remediate:
+    post:
+      summary: Remediate analyzed emails
+      description: Triggers remediation actions on analyzed emails identified as threats.
+      operationId: remediateAnalyzedEmails
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemediateRequest'
+      responses:
+        '204':
+          description: Success - No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+      security:
+        - azureADAuth: []
+components:
+  securitySchemes:
+    azureADAuth:
+      type: oauth2
+      description: Azure AD OAuth2 authentication
+      flows:
+        clientCredentials:
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            https://graph.microsoft.com/.default: Access Microsoft Graph
+  schemas:
+    RemediateRequest:
+      type: object
+      required:
+        - messageIds
+        - remediationAction
+      properties:
+        messageIds:
+          type: array
+          items:
+            type: string
+          description: Collection of IDs of the messages to remediate.
+        remediationAction:
+          type: string
+          enum:
+            - moveToInbox
+            - moveToJunk
+            - moveToDeletedItems
+            - softDelete
+            - hardDelete
+          description: The action to take on the messages.
+        customActionReason:
+          type: string
+          description: Optional reason for choosing the action.
+        reason:
+          type: string
+          enum:
+            - userReported
+            - detectedThreat
+            - other
+          description: The justification for the remediation action.
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags for the remediation action.
