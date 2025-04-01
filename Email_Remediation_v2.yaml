@@ -11,6 +11,13 @@ paths:
       summary: Remediate analyzed emails
       description: Triggers remediation actions on analyzed emails identified as threats.
       operationId: remediateAnalyzedEmails
+      descriptionForModel: This operation triggers remediation actions on analyzed emails identified as threats by accepting a list of message IDs and a specified remediation action, enabling automated threat response workflows in Microsoft Defender Action Center.
+      examplePrompts:
+        - Remediate emails with IDs "abc123" and "xyz789" by moving them to Junk.
+        - Trigger a soft delete on analyzed emails identified as threats with message IDs "msg001", "msg002".
+        - Move emails "email1", "email2", and "email3" to Deleted Items due to user report.
+        - Remediate analyzed email "threat123" with a hard delete and add reason "detectedThreat".
+        - Take action on emails "spam001" and "spam002" by moving them to Inbox with tag "falsePositive".
       requestBody:
         required: true
         content:
@@ -35,6 +42,17 @@ paths:
       summary: List analyzed emails
       description: Retrieve a list of analyzed emails. Supports OData query parameters.
       operationId: listAnalyzedEmails
+      descriptionForModel: This operation retrieves a list of analyzed emails from Microsoft Defender Action Center, enabling filtering, searching, and sorting through OData query parameters to support investigation and reporting of potential threats.
+      example prompts:
+        - List all analyzed emails from the last 7 days.
+        - Show analyzed emails flagged as threats.
+        - Retrieve analyzed emails reported by users.
+        - Get the top 10 most recent analyzed emails.
+        - Search analyzed emails with subject containing "phishing".
+        - Filter analyzed emails where remediation status is "pending".
+        - List analyzed emails from sender "alerts@security.com".
+        - Show analyzed emails and include their remediation status and tags.
+        - Show me all emails in the last 24 hours with Action Type of Soft Delete Emails.
       parameters:
         - name: $filter
           in: query
