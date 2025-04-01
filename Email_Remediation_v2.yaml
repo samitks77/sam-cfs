@@ -1,0 +1,186 @@
+openapi: 3.0.1
+info:
+  title: Microsoft Graph Security - Remediate Analyzed Emails
+  description: Plugin to call Microsoft Graph's security API to remediate and retrieve analyzed emails.
+  version: "beta"
+servers:
+  - url: https://graph.microsoft.com/beta
+paths:
+  /security/collaboration/analyzedEmails/remediate:
+    post:
+      summary: Remediate analyzed emails
+      description: Triggers remediation actions on analyzed emails identified as threats.
+      operationId: remediateAnalyzedEmails
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemediateRequest'
+      responses:
+        '204':
+          description: Success - No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+      security:
+        - azureADAuth: []
+  /security/collaboration/analyzedEmails:
+    get:
+      summary: List analyzed emails
+      description: Retrieve a list of analyzed emails. Supports OData query parameters.
+      operationId: listAnalyzedEmails
+      parameters:
+        - name: $filter
+          in: query
+          description: Filter items by property values.
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: Order items by property values.
+          required: false
+          schema:
+            type: string
+        - name: $search
+          in: query
+          description: Search items by search phrases.
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: Select properties to be returned.
+          required: false
+          schema:
+            type: string
+        - name: $expand
+          in: query
+          description: Expand related entities.
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: Show only the first n items.
+          required: false
+          schema:
+            type: integer
+        - name: $skip
+          in: query
+          description: Skip the first n items.
+          required: false
+          schema:
+            type: integer
+        - name: $count
+          in: query
+          description: Include count of items.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: A list of analyzed emails.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalyzedEmail'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+      security:
+        - azureADAuth: []
+components:
+  securitySchemes:
+    azureADAuth:
+      type: oauth2
+      description: Azure AD OAuth2 authentication
+      flows:
+        clientCredentials:
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            https://graph.microsoft.com/.default: Access Microsoft Graph
+  schemas:
+    RemediateRequest:
+      type: object
+      required:
+        - messageIds
+        - remediationAction
+      properties:
+        messageIds:
+          type: array
+          items:
+            type: string
+          description: Collection of IDs of the messages to remediate.
+        remediationAction:
+          type: string
+          enum:
+            - moveToInbox
+            - moveToJunk
+            - moveToDeletedItems
+            - softDelete
+            - hardDelete
+          description: The action to take on the messages.
+        customActionReason:
+          type: string
+          description: Optional reason for choosing the action.
+        reason:
+          type: string
+          enum:
+            - userReported
+            - detectedThreat
+            - other
+          description: The justification for the remediation action.
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags for the remediation action.
+    AnalyzedEmail:
+      type: object
+      properties:
+        id:
+          type: string
+        receivedDateTime:
+          type: string
+          format: date-time
+        subject:
+          type: string
+        sender:
+          type: object
+          properties:
+            emailAddress:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+        threats:
+          type: array
+          items:
+            type: string
+        remediationStatus:
+          type: string
+        internetMessageId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
